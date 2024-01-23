@@ -38,17 +38,13 @@ const DynamicForm = ({ optionsData, renderChatBot }) => {
 
   return (
     <>
-      <Row>
+      <Row className="py-3 px-3">
         <Col md={12}>
-          <h1 className="py-2 px-3">Chat With an Agent</h1>
-          <hr />
-          <h3 className="px-3">Hello, !</h3>
-          <p className="px-3">
-            We're glad to chat with you today. How can we help you?
-          </p>
+          <h3>Hello, !</h3>
+          <p>We're glad to chat with you today. How can we help you?</p>
         </Col>
         <Col md={12}>
-          <Form onSubmit={handleSubmit} className="px-3 py-2">
+          <Form onSubmit={handleSubmit}>
             <StyledDiv>
               <Form.Group className="mb-4">
                 <Form.Label>Choose a topic</Form.Label>
