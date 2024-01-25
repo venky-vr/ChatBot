@@ -1,21 +1,21 @@
 import React, { useState } from "react";
-import styled from "styled-components";
 import { Form, Row, Col } from "react-bootstrap";
+import styled from "styled-components";
 import ButtonComponent from "../Common/Button";
 
-const StyledDiv = styled.div`
-  margin-bottom: 230px;
+const MarginDiv = styled.div`
+  margin-bottom: 155px;
 `;
 
-const DynamicForm = ({ optionsData, renderChatBot }) => {
-  const [formData, setFormData] = useState({
+const IntroForm = ({ formData, optionsData, renderChatBot }) => {
+  const [introFormState, setIntroFormState] = useState({
     selectValue: "",
     textareaValue: "",
   });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setIntroFormState((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -23,8 +23,8 @@ const DynamicForm = ({ optionsData, renderChatBot }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(formData, "formData");
-    renderChatBot(formData);
+    console.log(introFormState, "formData");
+    renderChatBot(introFormState);
   };
 
   const handleKeyPress = (e) => {
@@ -32,52 +32,54 @@ const DynamicForm = ({ optionsData, renderChatBot }) => {
       handleSubmit(e);
     }
   };
-
   const isFormValid =
-    formData.selectValue.trim() !== "" && formData.textareaValue.trim() !== "";
+    introFormState.selectValue.trim() !== "" &&
+    introFormState.textareaValue.trim() !== "";
 
   return (
     <>
       <Row className="py-3 px-3">
         <Col md={12}>
-          <h3>Hello, !</h3>
+          <h3 className="fw-normal">Hello, !</h3>
           <p>We're glad to chat with you today. How can we help you?</p>
         </Col>
         <Col md={12}>
           <Form onSubmit={handleSubmit}>
-            <StyledDiv>
+            <MarginDiv>
               <Form.Group className="mb-4">
-                <Form.Label>Choose a topic</Form.Label>
+                <Form.Label className="fw-bold">Choose a topic</Form.Label>
                 <Form.Select
                   name="selectValue"
                   size="lg"
-                  value={formData.selectValue}
+                  value={introFormState.selectValue}
                   onChange={handleInputChange}
                 >
                   <option value="">Select</option>
-                  {/* {Object.keys(optionsData).map((key) => (
+                  {Object.keys(optionsData).map((key) => (
                     <option key={key} value={optionsData[key]}>
                       {optionsData[key]}
                     </option>
-                  ))} */}
-                  {optionsData.map((option) => (
-                    <option key={option.key}>{option.value}</option>
                   ))}
+                  {/* {optionsData.map((option) => (
+                    <option key={option.key}>{option.value}</option>
+                  ))} */}
                 </Form.Select>
               </Form.Group>
               <Form.Group className="mb-5">
-                <Form.Label>Enter your job title and question</Form.Label>
+                <Form.Label className="fw-bold">
+                  Enter your job title and question
+                </Form.Label>
                 <Form.Control
                   as="textarea"
                   name="textareaValue"
-                  placeholder="Leave a comment here"
+                  placeholder="Enter your Job Title followed by question"
                   rows={3}
-                  value={formData.textareaValue}
+                  value={introFormState.textareaValue}
                   onChange={handleInputChange}
                   onKeyUp={handleKeyPress}
                 />
               </Form.Group>
-            </StyledDiv>
+            </MarginDiv>
             <ButtonComponent
               className="w-100 py-2 my-2"
               type="submit"
@@ -92,4 +94,4 @@ const DynamicForm = ({ optionsData, renderChatBot }) => {
   );
 };
 
-export default DynamicForm;
+export default IntroForm;

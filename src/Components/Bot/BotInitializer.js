@@ -11,7 +11,7 @@ export const assertion = (options, callback) => {
     //botId: 'specialtywebchat',
     //chatId: '123',
   };
-  console.log(jsonData);
+  //console.log(jsonData);
 
   const requestObj = {
     method: "post",
@@ -20,8 +20,8 @@ export const assertion = (options, callback) => {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     // url: "http://localhost:3000/api/users/sts",
-    //url: "https://cai-speciality-provider-services-api-1-dev.apps-3.hs-4-nonprod.openshift.evernorthcloud.com/cai-speciality-provider-services/v1/api/interactions/123/generatejwt",
-    url: "https://cai-speciality-provider-services-api-1-dev.apps-3.hs-4-nonprod.openshift.evernorthcloud.com/cai-speciality-provider-services/v1/api/interactions/123/generateToken",
+    url: "https://cai-speciality-provider-services-api-1-dev.apps-3.hs-4-nonprod.openshift.evernorthcloud.com/cai-speciality-provider-services/v1/api/interactions/123/generateJWT",
+    //url: "https://cai-speciality-provider-services-api-1-dev.apps-3.hs-4-nonprod.openshift.evernorthcloud.com/cai-speciality-provider-services/v1/api/interactions/123/generateToken",
     data: new URLSearchParams(jsonData).toString(),
     responseType: "json",
   };

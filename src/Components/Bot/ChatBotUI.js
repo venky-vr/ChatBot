@@ -5,17 +5,26 @@ import ButtonComponent from "../Common/Button";
 import ErrorMessageComponent from "./ErrorMessageComponent";
 
 const BotContent = styled.div`
-  height: 500px;
+  height: 322px;
   display: block;
   overflow: auto;
   margin-bottom: 15px;
+  padding: 8px 8px 0px 8px;
 `;
 
 const BotBody = styled.div`
-  background: aliceblue;
-  padding: 9px;
-  width: 400px;
+  padding: 5px;
+  width: 350px;
   border-radius: 6px;
+  color: #515761;
+`;
+
+const StyledDiv = styled.div`
+  margin-top: 30px;
+`;
+
+const ConverSationTitle = styled.small`
+  color: #51576180;
 `;
 
 const ChatBotUI = ({
@@ -23,13 +32,20 @@ const ChatBotUI = ({
   selectedTopic,
   botMessages,
   userMessage,
-  userChat,
   onChangeUserMessage,
   onSendMessage,
   onKeyPress,
   isErrorMessage,
   isMuted,
 }) => {
+  const isFormValid = userMessage.trim() !== "";
+
+  const initialBg = true;
+
+  const BotBodyBg = {
+    backgroundColor: initialBg ? "#c7e9ea" : "#F8F8F8",
+  };
+
   useEffect(() => {
     const playAudio = () => {
       if (!isMuted) {
@@ -44,83 +60,73 @@ const ChatBotUI = ({
     }
   }, [botMessages, isMuted]);
 
-  const isFormValid = userMessage.trim() !== "";
-
   return (
     <>
       <Row className="px-3 py-2">
         <Col md={12} className="p-0">
-          <div>
-            <b>Topic:</b> {selectedTopic.selectValue}
-          </div>
-          <div>
-            <b>Question:</b> {selectedTopic.textareaValue}
-          </div>
           <BotContent ref={userMessageRef}>
-            {userChat &&
-              userChat.map((message, index) => (
-                <div
-                  key={index}
-                  className="d-flex align-items-end flex-column mb-4"
-                >
-                  {message.isUserMessage && (
-                    <small className="mb-2 text-muted h6">You</small>
-                  )}
-
-                  {isErrorMessage(message) ? (
-                    <ErrorMessageComponent message={message} />
-                  ) : (
-                    <BotBody>
-                      <p className="m-0 px-1">{message.body}</p>
-                      {/* Additional information, if needed */}
-                      {/* <small>{moment(message.timestamp).format('YYYY-MM-DD HH:mm:A')}</small> */}
-                    </BotBody>
-                  )}
-                </div>
-              ))}
-
+            <div className="d-flex flex-column mb-3 align-items-end">
+              <ConverSationTitle className="mb-0 h6">You</ConverSationTitle>
+              <BotBody style={BotBodyBg}>
+                <p className="m-0">{selectedTopic.textareaValue}</p>
+              </BotBody>
+            </div>
             {botMessages &&
-              botMessages.map((message, index) => (
-                <div
-                  key={index}
-                  className="d-flex align-items-end flex-column mb-4"
-                >
-                  <small className="mb-2 text-muted h6">Bot</small>
-
-                  {isErrorMessage(message) ? (
-                    <ErrorMessageComponent message={message} />
-                  ) : (
-                    <BotBody>
-                      <p className="m-0 px-1">{message.body}</p>
-                      {/* Additional information, if needed */}
-                      {/* <small>{moment(message.timestamp).format('YYYY-MM-DD HH:mm:A')}</small> */}
-                    </BotBody>
-                  )}
-                </div>
-              ))}
+              botMessages?.map((message, index) => {
+                const isUserMessage = message.isUserMessage;
+                return (
+                  <div
+                    key={index}
+                    className={`d-flex flex-column mb-3 ${
+                      isUserMessage ? "align-items-end" : "align-items-start"
+                    }`}
+                  >
+                    <ConverSationTitle className="mb-0 h6">
+                      {isUserMessage ? `You` : "ChatAgent"}
+                    </ConverSationTitle>
+                    {isErrorMessage(message) ? (
+                      <ErrorMessageComponent message={message} />
+                    ) : (
+                      <BotBody
+                        style={{
+                          backgroundColor: isUserMessage
+                            ? "#c7e9ea"
+                            : "#F8F8F8",
+                        }}
+                      >
+                        <p className="m-0">
+                          {isUserMessage ? message.body : message}
+                        </p>
+                      </BotBody>
+                    )}
+                  </div>
+                );
+              })}
           </BotContent>
         </Col>
         <Col md={12}>
-          <Form.Group className="mb-4">
-            <Form.Control
-              as="textarea"
-              rows={3}
-              name="message"
-              value={userMessage}
-              onChange={onChangeUserMessage}
-              autoFocus="autofocus"
-              autoComplete="off"
-              placeholder="Enter your message for the agent here..."
-              onKeyUp={onKeyPress}
-            />
-          </Form.Group>
-          <ButtonComponent
-            className="py-2 w-100 my-2"
-            onClick={onSendMessage}
-            disabled={!isFormValid}
-          >
-            Send Message
-          </ButtonComponent>
+          <StyledDiv>
+            <Form.Group className="mb-3">
+              <Form.Control
+                as="textarea"
+                rows={3}
+                name="message"
+                value={userMessage}
+                onChange={onChangeUserMessage}
+                autoFocus="autofocus"
+                autoComplete="off"
+                placeholder="Enter your message for the agent here..."
+                onKeyUp={onKeyPress}
+              />
+            </Form.Group>
+            <ButtonComponent
+              className="py-2 w-100 my-2"
+              onClick={onSendMessage}
+              disabled={!isFormValid}
+            >
+              Send Message
+            </ButtonComponent>
+          </StyledDiv>
         </Col>
       </Row>
     </>

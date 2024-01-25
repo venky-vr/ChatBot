@@ -1,7 +1,13 @@
 import React from "react";
 import styled from "styled-components";
 import { Row, Col, Button } from "react-bootstrap";
-import { BsFillBellFill, BsX, BsDash, BsArrowsExpand } from "react-icons/bs";
+import {
+  BsFillBellFill,
+  BsX,
+  BsDash,
+  BsBellSlashFill,
+  BsWindow,
+} from "react-icons/bs";
 
 const StyledTitle = styled.h2`
   font-size: 1.8rem;
@@ -10,9 +16,9 @@ const StyledTitle = styled.h2`
 const ChatBoxHeader = ({
   isMinimized,
   toggleMinimize,
-  closeChatbox,
   isMuted,
   toggleMute,
+  handleToggleConfirmation,
 }) => {
   const baseStyles = {
     background: "#fff",
@@ -42,42 +48,50 @@ const ChatBoxHeader = ({
           className="d-flex justify-content-between align-items-center px-2 py-2"
           style={isMinimized ? minimizedStyles : baseStyles}
         >
-          <StyledTitle className="py-2 px-2 mb-0">
+          <StyledTitle className="py-2 px-2 mb-0 fw-normal">
             Chat With an Agent
           </StyledTitle>
           <div className="d-flex justify-content-end align-items-center">
             <Button
               variant="link"
-              className="text-muted p-0"
+              className="text-muted p-1"
               onClick={toggleMute}
             >
               {isMuted ? (
-                <BsFillBellFill
+                <BsBellSlashFill
                   size={23}
                   style={isMinimized ? buttonBaseStyle : buttonMinimizedStyle}
                 />
               ) : (
-                <BsFillBellFill size={23} color="orange" />
+                <BsFillBellFill
+                  size={23}
+                  style={isMinimized ? buttonBaseStyle : buttonMinimizedStyle}
+                />
               )}
             </Button>
             <Button
               variant="link"
-              className="text-decoration-none"
+              className={`text-decoration-none px-1 fw-bold ${
+                isMinimized ? "mt-0" : "mt-3"
+              }`}
               onClick={toggleMinimize}
             >
               {isMinimized ? (
-                <BsArrowsExpand
-                  size={25}
+                <BsWindow
+                  size={22}
                   style={isMinimized ? buttonBaseStyle : buttonMinimizedStyle}
                 />
               ) : (
-                <BsDash size={30} />
+                <BsDash
+                  size={30}
+                  style={isMinimized ? buttonBaseStyle : buttonMinimizedStyle}
+                />
               )}
             </Button>
             <Button
               variant="link"
-              className="text-decoration-none"
-              onClick={closeChatbox}
+              className="text-decoration-none p-0"
+              onClick={handleToggleConfirmation}
             >
               <BsX
                 size={30}

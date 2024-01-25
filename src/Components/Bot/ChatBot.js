@@ -1,97 +1,85 @@
 import React, { useState, useEffect, useRef } from "react";
-// import moment from 'moment';
-import { assertion, koreAnonymousFn } from "./BotInitializer";
 import { initializeBot } from "./BotInitializer";
+import { assertion, koreAnonymousFn } from "./BotInitializer";
 import ChatBotUI from "./ChatBotUI";
 
-const ChatBot = ({ selectedTopic, isMuted }) => {
+const ChatBot = ({ selectedTopic, isMuted, options, selectedOption }) => {
   const [bot, setBot] = useState(null);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [botMessages, setBotMessages] = useState([]);
   const [userMessage, setUserMessage] = useState("");
-  const userMessageRef = useRef();
+  const [loading, setLoading] = useState(true);
 
-  const initilizeref = useRef(false);
+  const userMessageRef = useRef();
+  const initialized = useRef(false);
+
+  const initializeAndSetBot = async () => {
+    try {
+      const { profession, trimQuestion } = parseProfessionAndQuestion(
+        selectedTopic.textareaValue
+      );
+      const botInstance = await initializeBot({
+        koreAPIUrl: "https://cai-dev.express-scripts.com/api/",
+        logLevel: "debug",
+        koreSpeechAPIUrl: "",
+        ttsSocketUrl: "",
+        assertionFn: assertion,
+        koreAnonymousFn: koreAnonymousFn,
+        botInfo: {
+          chatBot: "CAISpecialtyProviderBusinessBot",
+          taskBotId: "st-855d08e1-df09-5d12-a6e9-a45fa0510dba",
+          customData: {
+            category: selectedTopic.selectValue,
+            Question: selectedTopic.textareaValue,
+            Profession: profession,
+            "Trim Question": trimQuestion,
+          },
+          optionsData: selectedOption,
+        },
+        // JWTUrl: "http://localhost:3001/api/users/sts",
+        userIdentity: "sohail.arif@express-scripts.com",
+        clientId: "cs-359536f4-eddb-5f23-b3e0-cdbd49c6536f",
+        clientSecret: "+QD7kvzQTJhBhN51bUjBE/p+aqRYR8eqkPTjoYCYrN8=",
+        loadHistory: false,
+      });
+
+      setBot(botInstance);
+
+      const handleIncomingMessage = (msg) => {
+        const dataObj = JSON.parse(msg.data);
+        if (dataObj.from === "bot" && dataObj.type === "bot_response") {
+          setBotMessages((prevMessages) => [
+            ...prevMessages,
+            dataObj.message[0].cInfo.body,
+          ]);
+        }
+      };
+
+      botInstance.on("history", function (historyRes) {
+        if (historyRes.messages && Array.isArray(historyRes.messages)) {
+          const historyMessages = historyRes.messages.flatMap((message) =>
+            message.message.map((msg) => msg.cInfo.body)
+          );
+          setBotMessages((prevMessages) => [
+            ...prevMessages,
+            ...historyMessages,
+          ]);
+        }
+        setHistoryLoaded(true);
+      });
+
+      botInstance.on("message", handleIncomingMessage);
+    } catch (error) {
+      console.error("Bot initialization failed:", error);
+    }
+  };
 
   useEffect(() => {
-    const initializeBotAPi = async () => {
-      try {
-        const botOptions = {
-          koreAPIUrl: "https://cai-dev.express-scripts.com/api/",
-          logLevel: "debug",
-          koreSpeechAPIUrl: "",
-          ttsSocketUrl: "",
-          assertionFn: assertion,
-          koreAnonymousFn: koreAnonymousFn,
-          botInfo: {
-            chatBot: "CAISpecialtyProviderBusinessBot",
-            taskBotId: "st-855d08e1-df09-5d12-a6e9-a45fa0510dba",
-            customData: {
-              category: selectedTopic.selectValue,
-              Question: selectedTopic.textareaValue,
-            },
-          },
-          // JWTUrl: "http://localhost:3001/api/users/sts",
-          userIdentity: "sohail.arif@express-scripts.com",
-          clientId: "cs-359536f4-eddb-5f23-b3e0-cdbd49c6536f",
-          clientSecret: "+QD7kvzQTJhBhN51bUjBE/p+aqRYR8eqkPTjoYCYrN8=",
-          loadHistory: false,
-        };
-
-        // Initialize the bot
-        const botInstance = await initializeBot(botOptions);
-        setBot(botInstance);
-
-        const message1ToBot = {
-          message: { body: "SpecBotAppStart", attachments: [] },
-          resourceid: "/bot.message",
-          clientMessageId: Date.now(),
-        };
-
-        botInstance.sendMessage(message1ToBot, () => {
-          console.log("Message sent to the bot");
-        });
-
-        // Listen to messages from the server
-        const handleIncomingMessage = (msg) => {
-          const dataObj = JSON.parse(msg.data);
-          if (dataObj.from === "bot" && dataObj.type === "bot_response") {
-            // Handle bot response message
-            setBotMessages((prevMessages) => [
-              ...prevMessages,
-              dataObj.message[0].cInfo.body,
-            ]);
-          }
-        };
-
-        if (!historyLoaded) {
-          botInstance.on("history", function (historyRes) {
-            // Assuming historyRes.messages is an array of messages
-            if (historyRes.messages && Array.isArray(historyRes.messages)) {
-              const historyMessages = historyRes.messages.flatMap((message) =>
-                message.message.map((msg) => msg.cInfo.body)
-              );
-              setBotMessages((prevMessages) => [
-                ...prevMessages,
-                ...historyMessages,
-              ]);
-            }
-            setHistoryLoaded(true);
-          });
-        }
-
-        // Attach the event listener for incoming messages
-        botInstance.on("message", handleIncomingMessage);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    if (!initilizeref.current) {
-      initializeBotAPi();
-      initilizeref.current = true;
+    if (!initialized.current && !bot) {
+      initialized.current = true;
+      initializeAndSetBot();
     }
 
-    // Cleanup function when the component is unmounted
     return () => {
       if (bot) {
         bot.destroy();
@@ -99,10 +87,32 @@ const ChatBot = ({ selectedTopic, isMuted }) => {
     };
   }, [
     bot,
+    initialized,
     historyLoaded,
     selectedTopic.selectValue,
     selectedTopic.textareaValue,
+    options,
   ]);
+
+  useEffect(() => {
+    const handleOpen = () => {
+      if (bot) {
+        sendInitialMessage(bot);
+        bot.removeListener("open", handleOpen);
+      }
+    };
+
+    if (bot) {
+      bot.on("open", handleOpen);
+    }
+
+    return () => {
+      if (bot) {
+        bot.removeListener("open", handleOpen);
+        bot.destroy();
+      }
+    };
+  }, [bot]);
 
   useEffect(() => {
     scrollToBottom();
@@ -114,24 +124,64 @@ const ChatBot = ({ selectedTopic, isMuted }) => {
     }
   };
 
-  const sendMessageToBot = () => {
-    if (bot) {
-      const messageToBot = {
-        message: { body: userMessage, attachments: [] },
+  const sendInitialMessage = (botInstance) => {
+    if (botInstance) {
+      const initialMessageToBot = {
+        message: { body: "SpecBotAppStart", attachments: [] },
         resourceid: "/bot.message",
         clientMessageId: Date.now(),
       };
-      setBotMessages((prevMessages) => [...prevMessages, userMessage]);
 
-      setUserMessage(""); // Clear the input field
-      // Send a message to the bot
-      bot.sendMessage(messageToBot, () => {
-        console.log("Message sent to the bot");
+      botInstance.sendMessage(initialMessageToBot, () => {
+        setLoading(false);
+      });
+    } else {
+      console.error("Bot instance is not available yet. Message not sent.");
+    }
+  };
+
+  const parseProfessionAndQuestion = (text) => {
+    const regex = /^(\w+)\s(.+)$/gm;
+    const match = regex.exec(text);
+    if (match) {
+      const [, profession, trimQuestion] = match;
+      //console.log("js:profession", profession);
+      //console.log("js: trimQuestion", trimQuestion);
+      return { profession, trimQuestion };
+    }
+
+    return { profession: "", trimQuestion: "" };
+  };
+
+  const sendMessageToBot = async () => {
+    if (bot) {
+      const timestamp = Date.now();
+      const userMessageObject = {
+        body: userMessage,
+        isUserMessage: true,
+        timestamp: timestamp,
+      };
+      setBotMessages((prevMessages) => [...prevMessages, userMessageObject]);
+      setUserMessage("");
+
+      const messageToBot = {
+        message: { body: userMessage, attachments: [] },
+        resourceid: "/bot.message",
+        clientMessageId: timestamp,
+        timestamp: timestamp,
+      };
+
+      bot.sendMessage(messageToBot, (botReply) => {
+        const botReplyObject = {
+          body: botReply.body,
+          isUserMessage: false,
+          timestamp: botReply.timestamp,
+        };
+        setBotMessages((prevMessages) => [...prevMessages, botReplyObject]);
       });
     }
   };
 
-  // Check if the message represents an error
   const isErrorMessage = (message) => {
     try {
       const parsedMessage = JSON.parse(message);
@@ -155,6 +205,7 @@ const ChatBot = ({ selectedTopic, isMuted }) => {
         selectedTopic={selectedTopic}
         botMessages={botMessages}
         userMessage={userMessage}
+        loading={loading}
         onChangeUserMessage={(e) => setUserMessage(e.target.value)}
         onSendMessage={sendMessageToBot}
         onKeyPress={handleKeyPress}
