@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
-import axios from "axios";
 import ChatBoxHeader from "./Common/ChatBotHeader";
-import IntroForm from "./Chat/IntroForm";
 import ChatBot from "./Bot/ChatBot";
 import ConfirmationDialog from "./Common/ConfirmationDialog";
+import IntroForm from "./Chat/IntroForm";
 
 const StyledChatBox = styled.div`
   width: 450px;
@@ -15,16 +14,6 @@ const StyledChatBox = styled.div`
 `;
 
 const ChatContainer = () => {
-  // const topics = [
-  //   { value: "General Question", key: "gen" },
-  //   { value: "Order Status", key: "orders" },
-  //   { value: "Shipment Inquiry", key: "ship" },
-  //   { value: "PA/PLA Questions", key: "papla" },
-  //   { value: "Drug Coverage/Pricing", key: "drugcov" },
-  //   { value: "Billing and CoPay", key: "billcopay" },
-  //   { value: "FAQ", key: "faq" },
-  // ];
-
   const [formSubmit, setFormSubmit] = useState(false);
   const [options, setOptions] = useState([]);
   const [selectedTopic, setSelectedTopic] = useState({});
@@ -34,33 +23,13 @@ const ChatContainer = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
-  const initialized = useRef(false);
-
   const chatBoxHeight = {
     height: isChatboxOpen ? (isMinimized ? "auto" : "615px") : "0",
   };
 
-  useEffect(() => {
-    const fetchOptionsData = async () => {
-      try {
-        const response = await axios.get(
-          `https://cai-speciality-provider-services-api-1-dev.apps-3.hs-4-nonprod.openshift.evernorthcloud.com/cai-speciality-provider-services/v1/api/interactions/getCategories`
-        );
-        setOptions(response.data);
-      } catch (err) {
-        console.error("Error fetching options:", err);
-      }
-    };
-
-    if (!initialized.current) {
-      fetchOptionsData();
-      initialized.current = true;
-    }
-  }, []);
-
   const renderChatBot = (obj) => {
     setSelectedTopic(obj);
-    const selectedOption = options[obj.selectValue];
+    const selectedOption = options[obj?.selectValue];
     setSelectedOption(selectedOption);
     setFormSubmit(true);
   };
@@ -105,6 +74,7 @@ const ChatContainer = () => {
           {!formSubmit ? (
             <IntroForm
               optionsData={Object.keys(options)}
+              setOptionsData={setOptions}
               renderChatBot={renderChatBot}
             />
           ) : (
@@ -112,6 +82,7 @@ const ChatContainer = () => {
               selectedTopic={selectedTopic}
               isMuted={isMuted}
               selectedOption={selectedOption}
+              isChatboxOpen={isChatboxOpen}
             />
           )}
         </div>

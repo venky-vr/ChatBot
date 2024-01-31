@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Form, Row, Col } from "react-bootstrap";
 import styled from "styled-components";
 import ButtonComponent from "../Common/Button";
@@ -36,7 +36,6 @@ const ChatBotUI = ({
   onSendMessage,
   onKeyPress,
   isErrorMessage,
-  isMuted,
 }) => {
   const isFormValid = userMessage.trim() !== "";
 
@@ -45,20 +44,6 @@ const ChatBotUI = ({
   const BotBodyBg = {
     backgroundColor: initialBg ? "#c7e9ea" : "#F8F8F8",
   };
-
-  useEffect(() => {
-    const playAudio = () => {
-      if (!isMuted) {
-        const audioElement = new Audio("https://dummyurl.com/audio1.mp3"); // Replace with the path to your audio file
-        audioElement.play();
-      }
-    };
-
-    // Check if there are new bot messages
-    if (botMessages.length > 0) {
-      playAudio();
-    }
-  }, [botMessages, isMuted]);
 
   return (
     <>

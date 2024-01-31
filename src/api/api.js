@@ -1,4 +1,3 @@
-// api.js
 import axios from "axios";
 
 const commonOptions = {
@@ -7,7 +6,29 @@ const commonOptions = {
 };
 
 const JWT_TOKEN_URL =
-  "https://cai-speciality-provider-services-api-1-dev.apps-3.hs-4-nonprod.openshift.evernorthcloud.com/cai-speciality-provider-services/v1/api/interactions/123/generateToken";
+  "https://cai-speciality-provider-services-api-1-dev.apps-3.hs-4-nonprod.openshift.evernorthcloud.com/cai-speciality-provider-services/v1/api/interactions/123/generateJWT";
+
+const parseProfessionAndQuestion = (text) => {
+  const regex = /^(\w+)\s(.+)$/gm;
+  const match = regex.exec(text);
+  if (match) {
+    const [, title, question] = match;
+    return { title, question };
+  }
+  return { title: "", question: "" };
+};
+
+export const fetchOptionsData = async () => {
+  try {
+    const response = await axios.get(
+      "https://cai-speciality-provider-services-api-1-dev.apps-3.hs-4-nonprod.openshift.evernorthcloud.com/cai-speciality-provider-services/v1/api/interactions/getCategories"
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Error fetching options:", err);
+    throw err;
+  }
+};
 
 export const generateJwtToken = async () => {
   try {
@@ -37,7 +58,6 @@ export const generateJwtToken = async () => {
 
 export const koreAnonymousFn = () => {
   // Implement your logic for anonymous function
-  // ...
 };
 
 export const initializeBot = (botOptions) => {
@@ -47,17 +67,20 @@ export const initializeBot = (botOptions) => {
   return bot;
 };
 
-export const initializeBotAPi = async (
+export const initializeAndSetBot = async (
   selectedTopic,
   setBot,
   setBotMessages,
   setHistoryLoaded,
-  historyLoaded,
-  initilizeref
+  selectedOption
 ) => {
+  const jwtToken = await generateJwtToken({});
   try {
-    const jwtToken = await generateJwtToken({});
-    const botOptions = {
+    const { title, question } = parseProfessionAndQuestion(
+      selectedTopic.textareaValue
+    );
+
+    const botInstance = await initializeBot({
       koreAPIUrl: "https://cai-dev.express-scripts.com/api/",
       logLevel: "debug",
       koreSpeechAPIUrl: "",
@@ -72,34 +95,22 @@ export const initializeBotAPi = async (
         taskBotId: "st-855d08e1-df09-5d12-a6e9-a45fa0510dba",
         customData: {
           category: selectedTopic.selectValue,
-          Question: selectedTopic.textareaValue,
+          Title: title,
+          Question: question,
         },
+        optionsData: selectedOption,
       },
       userIdentity: "sohail.arif@express-scripts.com",
       clientId: commonOptions.clientId,
       clientSecret: commonOptions.clientSecret,
       loadHistory: false,
-    };
-
-    // Initialize the bot
-    const botInstance = await initializeBot(botOptions);
-    setBot(botInstance);
-
-    const message1ToBot = {
-      message: { body: "SpecBotAppStart", attachments: [] },
-      resourceid: "/bot.message",
-      clientMessageId: Date.now(),
-    };
-
-    botInstance.sendMessage(message1ToBot, () => {
-      console.log("Message sent to the bot");
     });
 
-    // Listen to messages from the server
+    setBot(botInstance);
+
     const handleIncomingMessage = (msg) => {
       const dataObj = JSON.parse(msg.data);
       if (dataObj.from === "bot" && dataObj.type === "bot_response") {
-        // Handle bot response message
         setBotMessages((prevMessages) => [
           ...prevMessages,
           dataObj.message[0].cInfo.body,
@@ -107,27 +118,18 @@ export const initializeBotAPi = async (
       }
     };
 
-    if (!historyLoaded) {
-      botInstance.on("history", function (historyRes) {
-        // Assuming historyRes.messages is an array of messages
-        if (historyRes.messages && Array.isArray(historyRes.messages)) {
-          const historyMessages = historyRes.messages.flatMap((message) =>
-            message.message.map((msg) => msg.cInfo.body)
-          );
-          setBotMessages((prevMessages) => [
-            ...prevMessages,
-            ...historyMessages,
-          ]);
-        }
-        setHistoryLoaded(true);
-      });
-    }
+    botInstance.on("history", function (historyRes) {
+      if (historyRes.messages && Array.isArray(historyRes.messages)) {
+        const historyMessages = historyRes.messages.flatMap((message) =>
+          message.message.map((msg) => msg.cInfo.body)
+        );
+        setBotMessages((prevMessages) => [...prevMessages, ...historyMessages]);
+      }
+      setHistoryLoaded(true);
+    });
 
-    // Attach the event listener for incoming messages
     botInstance.on("message", handleIncomingMessage);
-    initilizeref.current = true;
-    // onApiCallComplete();
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.error("Bot initialization failed:", error);
   }
 };

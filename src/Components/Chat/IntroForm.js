@@ -1,17 +1,46 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Form, Row, Col } from "react-bootstrap";
 import styled from "styled-components";
+import { fetchOptionsData } from "../../api/api";
 import ButtonComponent from "../Common/Button";
 
 const MarginDiv = styled.div`
   margin-bottom: 155px;
 `;
 
-const IntroForm = ({ formData, optionsData, renderChatBot }) => {
+const IntroForm = ({ renderChatBot, setOptionsData, optionsData }) => {
+  // const topics = [
+  //   { value: "General Question", key: "gen" },
+  //   { value: "Order Status", key: "orders" },
+  //   { value: "Shipment Inquiry", key: "ship" },
+  //   { value: "PA/PLA Questions", key: "papla" },
+  //   { value: "Drug Coverage/Pricing", key: "drugcov" },
+  //   { value: "Billing and CoPay", key: "billcopay" },
+  //   { value: "FAQ", key: "faq" },
+  // ];
+
   const [introFormState, setIntroFormState] = useState({
     selectValue: "",
     textareaValue: "",
   });
+
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const getOptionsData = await fetchOptionsData();
+        setOptionsData(getOptionsData);
+      } catch (error) {
+        console.error("Error fetching options:", error);
+      }
+    };
+
+    if (!initialized.current) {
+      initialized.current = true;
+      fetchOptions();
+    }
+  }, [setOptionsData]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -23,13 +52,12 @@ const IntroForm = ({ formData, optionsData, renderChatBot }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(introFormState, "formData");
     renderChatBot(introFormState);
   };
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
-      handleSubmit(e);
+      if (isFormValid) handleSubmit(e);
     }
   };
   const isFormValid =

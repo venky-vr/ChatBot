@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { initializeBot } from "./BotInitializer";
-import { assertion, koreAnonymousFn } from "./BotInitializer";
+import { initializeAndSetBot } from "../../api/api";
 import ChatBotUI from "./ChatBotUI";
+// import audio from "../Common/Audio/time-is-now-585.mp3";
 
-const ChatBot = ({ selectedTopic, isMuted, options, selectedOption }) => {
+const ChatBot = ({ selectedTopic, isMuted, selectedOption, isChatboxOpen }) => {
   const [bot, setBot] = useState(null);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [botMessages, setBotMessages] = useState([]);
@@ -13,71 +13,23 @@ const ChatBot = ({ selectedTopic, isMuted, options, selectedOption }) => {
   const userMessageRef = useRef();
   const initialized = useRef(false);
 
-  const initializeAndSetBot = async () => {
-    try {
-      const { profession, trimQuestion } = parseProfessionAndQuestion(
-        selectedTopic.textareaValue
-      );
-      const botInstance = await initializeBot({
-        koreAPIUrl: "https://cai-dev.express-scripts.com/api/",
-        logLevel: "debug",
-        koreSpeechAPIUrl: "",
-        ttsSocketUrl: "",
-        assertionFn: assertion,
-        koreAnonymousFn: koreAnonymousFn,
-        botInfo: {
-          chatBot: "CAISpecialtyProviderBusinessBot",
-          taskBotId: "st-855d08e1-df09-5d12-a6e9-a45fa0510dba",
-          customData: {
-            category: selectedTopic.selectValue,
-            Question: selectedTopic.textareaValue,
-            Profession: profession,
-            "Trim Question": trimQuestion,
-          },
-          optionsData: selectedOption,
-        },
-        // JWTUrl: "http://localhost:3001/api/users/sts",
-        userIdentity: "sohail.arif@express-scripts.com",
-        clientId: "cs-359536f4-eddb-5f23-b3e0-cdbd49c6536f",
-        clientSecret: "+QD7kvzQTJhBhN51bUjBE/p+aqRYR8eqkPTjoYCYrN8=",
-        loadHistory: false,
-      });
-
-      setBot(botInstance);
-
-      const handleIncomingMessage = (msg) => {
-        const dataObj = JSON.parse(msg.data);
-        if (dataObj.from === "bot" && dataObj.type === "bot_response") {
-          setBotMessages((prevMessages) => [
-            ...prevMessages,
-            dataObj.message[0].cInfo.body,
-          ]);
-        }
-      };
-
-      botInstance.on("history", function (historyRes) {
-        if (historyRes.messages && Array.isArray(historyRes.messages)) {
-          const historyMessages = historyRes.messages.flatMap((message) =>
-            message.message.map((msg) => msg.cInfo.body)
-          );
-          setBotMessages((prevMessages) => [
-            ...prevMessages,
-            ...historyMessages,
-          ]);
-        }
-        setHistoryLoaded(true);
-      });
-
-      botInstance.on("message", handleIncomingMessage);
-    } catch (error) {
-      console.error("Bot initialization failed:", error);
-    }
-  };
-
   useEffect(() => {
+    const initializeBotApi = async () => {
+      try {
+        await initializeAndSetBot(
+          selectedTopic,
+          setBot,
+          setBotMessages,
+          setHistoryLoaded,
+          selectedOption
+        );
+      } catch (error) {
+        console.error("Bot initialization failed:", error);
+      }
+    };
     if (!initialized.current && !bot) {
       initialized.current = true;
-      initializeAndSetBot();
+      initializeBotApi();
     }
 
     return () => {
@@ -85,14 +37,7 @@ const ChatBot = ({ selectedTopic, isMuted, options, selectedOption }) => {
         bot.destroy();
       }
     };
-  }, [
-    bot,
-    initialized,
-    historyLoaded,
-    selectedTopic.selectValue,
-    selectedTopic.textareaValue,
-    options,
-  ]);
+  }, [bot, historyLoaded, selectedOption, selectedTopic]);
 
   useEffect(() => {
     const handleOpen = () => {
@@ -140,20 +85,18 @@ const ChatBot = ({ selectedTopic, isMuted, options, selectedOption }) => {
     }
   };
 
-  const parseProfessionAndQuestion = (text) => {
-    const regex = /^(\w+)\s(.+)$/gm;
-    const match = regex.exec(text);
-    if (match) {
-      const [, profession, trimQuestion] = match;
-      //console.log("js:profession", profession);
-      //console.log("js: trimQuestion", trimQuestion);
-      return { profession, trimQuestion };
-    }
-
-    return { profession: "", trimQuestion: "" };
-  };
+  // "https://commondatastorage.googleapis.com/codeskulptor-assets/week7-brrring.m4a"
 
   const sendMessageToBot = async () => {
+    if (isChatboxOpen && !isMuted && botMessages.length > 0) {
+      const lastMessage = botMessages[botMessages.length - 1];
+      if (!lastMessage.isUserMessage) {
+        const audioElement = new Audio(
+          "https://commondatastorage.googleapis.com/codeskulptor-assets/week7-brrring.m4a"
+        );
+        audioElement.play();
+      }
+    }
     if (bot) {
       const timestamp = Date.now();
       const userMessageObject = {
