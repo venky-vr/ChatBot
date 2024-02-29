@@ -1,14 +1,21 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
+import axios from "axios";
 import { Form, Row, Col } from "react-bootstrap";
 import styled from "styled-components";
-import { fetchOptionsData } from "../../api/api";
+import { fetchOptionsData, accessToken } from "../../api/api";
 import ButtonComponent from "../Common/Button";
 
 const MarginDiv = styled.div`
   margin-bottom: 155px;
 `;
 
-const IntroForm = ({ renderChatBot, setOptionsData, optionsData }) => {
+const IntroForm = ({
+  renderChatBot,
+  setOptionsData,
+  optionsData,
+  introFormState,
+  handleInputChange,
+}) => {
   // const topics = [
   //   { value: "General Question", key: "gen" },
   //   { value: "Order Status", key: "orders" },
@@ -19,18 +26,25 @@ const IntroForm = ({ renderChatBot, setOptionsData, optionsData }) => {
   //   { value: "FAQ", key: "faq" },
   // ];
 
-  const [introFormState, setIntroFormState] = useState({
-    selectValue: "",
-    textareaValue: "",
-  });
-
   const initialized = useRef(false);
 
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const getOptionsData = await fetchOptionsData();
-        setOptionsData(getOptionsData);
+        const getAccessToken = await accessToken();
+        axios
+          .get(
+            "https://api-dev.express-scripts.io/cai-speciality-provider-services/v1/api/interactions/getCategories",
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${getAccessToken}`,
+              },
+            }
+          )
+          .then((optionsRes) => {
+            setOptionsData(optionsRes.data);
+          });
       } catch (error) {
         console.error("Error fetching options:", error);
       }
@@ -40,15 +54,23 @@ const IntroForm = ({ renderChatBot, setOptionsData, optionsData }) => {
       initialized.current = true;
       fetchOptions();
     }
-  }, [setOptionsData]);
+  }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setIntroFormState((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  // useEffect(() => {
+  //   const fetchOptions = async () => {
+  //     try {
+  //       const getOptionsData = await fetchOptionsData();
+  //       setOptionsData(getOptionsData);
+  //     } catch (error) {
+  //       console.error("Error fetching options:", error);
+  //     }
+  //   };
+
+  //   if (!initialized.current) {
+  //     initialized.current = true;
+  //     fetchOptions();
+  //   }
+  // }, [setOptionsData]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

@@ -16,19 +16,22 @@ const StyledChatBox = styled.div`
 const ChatContainer = () => {
   const [formSubmit, setFormSubmit] = useState(false);
   const [options, setOptions] = useState([]);
-  const [selectedTopic, setSelectedTopic] = useState({});
   const [selectedOption, setSelectedOption] = useState({});
   const [isMinimized, setIsMinimized] = useState(false);
   const [isChatboxOpen, setIsChatboxOpen] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [introFormState, setIntroFormState] = useState({
+    selectValue: "",
+    textareaValue: "",
+  });
 
   const chatBoxHeight = {
     height: isChatboxOpen ? (isMinimized ? "auto" : "615px") : "0",
   };
 
   const renderChatBot = (obj) => {
-    setSelectedTopic(obj);
+    setIntroFormState(obj);
     const selectedOption = options[obj?.selectValue];
     setSelectedOption(selectedOption);
     setFormSubmit(true);
@@ -55,6 +58,14 @@ const ChatContainer = () => {
     setShowConfirmation(!showConfirmation);
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setIntroFormState((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   return (
     <StyledChatBox
       className="position-fixed bottom-0 end-0 m-3"
@@ -76,13 +87,17 @@ const ChatContainer = () => {
               optionsData={Object.keys(options)}
               setOptionsData={setOptions}
               renderChatBot={renderChatBot}
+              introFormState={introFormState}
+              handleInputChange={handleInputChange}
             />
           ) : (
             <ChatBot
-              selectedTopic={selectedTopic}
               isMuted={isMuted}
               selectedOption={selectedOption}
               isChatboxOpen={isChatboxOpen}
+              optionsData={Object.keys(options)}
+              handleInputChange={handleInputChange}
+              introFormState={introFormState}
             />
           )}
         </div>
@@ -91,6 +106,9 @@ const ChatContainer = () => {
       {/* Confirmation Dialog */}
       {showConfirmation && (
         <ConfirmationDialog
+          dialogTtitle="Are you sure you want to end this chat?"
+          concellabel="Cancel"
+          confirmLabel="End Chat"
           onConfirm={handleConfirmClose}
           onCancel={handleCancelClose}
         />

@@ -14,6 +14,20 @@
 <body>
   <noscript>You need to enable JavaScript to run this app.</noscript>
   <div id="root"></div>
+  <script>
+    window.config = {
+      authApiCall: '/dev/SSI/config/spcltyprvdr/envVars/authApiCall',
+      authGenerateJwtUrl: '/dev/SSI/config/spcltyprvdr/envVars/authGenerateJwtUrl',
+      authGenerateTokenUrl: '/dev/SSI/config/spcltyprvdr/envVars/authGenerateTokenUrl',
+      generateJwtUrl: '/dev/SSI/config/spcltyprvdr/envVars/generateJwtUrl',
+    };
+
+    window.REACT_APP_AUTHINATOR_API_CALL = "%REACT_APP_AUTHINATOR_API_CALL%";
+    window.REACT_APP_AUTH_GENERATE_JWT_URL = "%REACT_APP_AUTH_GENERATE_JWT_URL%";
+    window.REACT_APP_AUTH_GENERATE_TOKEN_URL = "%REACT_APP_AUTH_GENERATE_TOKEN_URL%";
+    window.REACT_APP_GENERATE_JWT_URL = "%REACT_APP_GENERATE_JWT_URL%";
+
+  </script>
 </body>
 
 </html>

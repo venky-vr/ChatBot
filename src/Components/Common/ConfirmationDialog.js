@@ -12,7 +12,13 @@ const CancelButton = styled(ButtonComponent)`
   color: #15a4a7;
 `;
 
-const ConfirmationDialog = ({ onConfirm, onCancel }) => {
+const ConfirmationDialog = ({
+  onConfirm,
+  onCancel,
+  dialogTtitle,
+  concellabel,
+  confirmLabel,
+}) => {
   return (
     <Container
       className="d-flex flex-column align-items-center justify-content-center"
@@ -21,19 +27,19 @@ const ConfirmationDialog = ({ onConfirm, onCancel }) => {
       <Row className="my-auto">
         <Col>
           <ConfirmationTitle className="text-center mt-5 fw-normal px-5">
-            Are you sure you want to end this chat?
+            {dialogTtitle}
           </ConfirmationTitle>
         </Col>
       </Row>
       <Row className="mt-auto w-100">
         <Col>
           <CancelButton onClick={onCancel} className="w-100">
-            Cancel
+            {concellabel}
           </CancelButton>
         </Col>
         <Col>
           <ButtonComponent onClick={onConfirm} className="w-100">
-            End Chat
+            {confirmLabel}
           </ButtonComponent>
         </Col>
       </Row>
